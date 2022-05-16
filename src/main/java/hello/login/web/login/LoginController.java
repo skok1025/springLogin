@@ -18,6 +18,7 @@ import hello.login.domain.login.LoginService;
 import hello.login.domain.member.Member;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Slf4j
 @Controller
@@ -68,7 +69,7 @@ public class LoginController {
 
 		return "redirect:/";
 	}
-	@PostMapping("/login")
+	//@PostMapping("/login")
 	public String loginv3(@Valid @ModelAttribute LoginForm form, BindingResult bindingResult, HttpServletRequest request) {
 		if (bindingResult.hasErrors()) {
 			return "login/loginForm";
@@ -87,6 +88,29 @@ public class LoginController {
 		session.setAttribute(SessionConst.LOGIN_MEMBER, loginMember);
 
 		return "redirect:/";
+	}
+	@PostMapping("/login")
+	public String loginv4(@Valid @ModelAttribute LoginForm form,
+						  BindingResult bindingResult,
+						  @RequestParam(defaultValue = "/") String redirectURL,
+						  HttpServletRequest request) {
+		if (bindingResult.hasErrors()) {
+			return "login/loginForm";
+		}
+		Member loginMember = loginService.login(form.getLoginId(), form.getPassword());
+
+		if (loginMember == null) {
+			bindingResult.reject("loginFail", "아이디 또는 비밀번호가 맞지 않습니다.");
+			return "login/loginForm";
+		}
+
+		// 세션 관리자를 통해 세션을 생성하고, 회원 데이터 보관
+		HttpSession session = request.getSession();
+
+		// 세션에 로그인 회원정보 저장
+		session.setAttribute(SessionConst.LOGIN_MEMBER, loginMember);
+
+		return "redirect:" + redirectURL;
 	}
 
 	//@PostMapping("/logout")
